@@ -100,3 +100,13 @@ void clear_string(string* s){
     memset(s->ptr, '\0', s->capacity);
     s->size = 0;
 }
+
+unsigned int string_count_characters(string s, char c) {
+    unsigned int count = 0;
+    for(int i = 0 ; i<s.size;++i){
+	if(s.ptr[i] == c) {
+	    count++;
+	}
+    }
+    return count;
+}

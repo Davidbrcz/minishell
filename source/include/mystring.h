@@ -115,5 +115,7 @@ void print_string(string s);
 void pop_string(string* s);
 
 void clear_string(string* s);
+
+unsigned int string_count_characters(string s, char c);
 #endif
 
