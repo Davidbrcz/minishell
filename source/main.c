@@ -69,47 +69,51 @@ array(char_ptr) build_excevp_args(array(string) arr){
     return tmp;
 }
 void handle_user_input(const char* itself ,string* s){
-	pid_t pid = fork();
+    pid_t pid = fork();
 
-	if(pid > 0){
-	    waitpid(pid,NULL,0);
-	    printf("---------Father %d--------\n",getpid());
-//	    clear_string(s);
-//	    *s = get_user_input();
-	}
-	else if(0 == pid){
-	    printf("----------child %d-------------\n",getpid());
-
-	    //lunching itself with the user input on the CLI
-	    execlp(itself,itself,get_str(*s),NULL);
-	    printf("error child \n");
-	}
-	else{
-	    printf("error while forking");
-	}
+    if(pid > 0){
+	waitpid(pid,NULL,0);
+	printf("---------Father %d--------\n",getpid());
+    }
+    else if(0 == pid){
+	printf("----------child %d-------------\n",getpid());
+	//lunching itself with the user input on the CLI
+	execlp(itself,itself,get_str(*s),NULL);
+	printf("error child \n");
+    }
+    else{
+	printf("error while forking");
+    }
 }
+
 int main(int argc,char* argv[])
 {
-    printf("Init shell : %d \n",getpid());
-
-	//there are no arguments on the CLI
-	if(1 == argc)
-	{
-
-	    while(1)
-	    {
-		string s = get_user_input();
-		handle_user_input(argv[0],&s);
-		destruct_string(&s);
-	    }
-	} else {
-
-	    for(int i =0;i<argc;i++){
-		printf("%s \n",argv[i]);
-	    }
-//	    break;
+    //there are no arguments on the CLI
+    if(1 == argc)
+    {
+	printf("Init shell : %d \n",getpid());
+	while(1) {
+	    string s = get_user_input();
+	    handle_user_input(argv[0],&s);
+	    destruct_string(&s);
 	}
-	//  }
+    } else if(argc > 1){
+	printf("executor : %d \n",getpid());
+	string tmp;
+	build_string(&tmp);
+	append_string(&tmp,argv[1]);
+	unsigned int how_many_pipes = string_count_characters(tmp,'|');
+	if(how_many_pipes == 0){
+	    array(string) input = tokenize(get_str(tmp)," ");
+
+	    string cmd = get_elem_array(string)(input,0);
+	    array(char_ptr) args = build_excevp_args(input);
+
+	    execvp(get_str(cmd),get_array(char_ptr)(args));
+	} else {
+	    //handle_multiple_commands();
+	}
+    }
 
     return 0;
 }
