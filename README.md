@@ -6,6 +6,7 @@ Small shell written in C
 ---------
 How to compile 
 
-cd bin
-cmake ../trunk
-make
+- mkdir bin
+- cd bin
+- cmake ../trunk
+- make
