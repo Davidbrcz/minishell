@@ -10,14 +10,37 @@
 
 #include "mystring.h"
 #include "array_string.h"
+#include <sys/types.h>
+#include <pwd.h>
 
 char delim_cmd[]={'|'};
 
 const int FD_WRITTING = 1;
 const int FD_READING = 0;
 
+string format_pre_prompt(){
+    struct passwd *pw = getpwuid(getuid());
+    const char *homedir = pw->pw_dir;
+
+    char* pwd = get_current_dir_name();
+    string result;
+    build_string(&result);
+    char* r = strstr(pwd,homedir);
+    if(r){       
+        append_char(&result,'~');
+	append_string(&result,r+strlen(homedir));
+    }
+    else{
+        append_string(&result,pwd);
+    }
+
+    free(pwd);
+    return result;
+}
 string get_user_input() {
-    printf("> ");
+    string result = format_pre_prompt();
+    printf("%s >",get_str(result));
+    destruct_string(&result);
 
     if(fflush(stdout) != 0){
 	exit(-1);
@@ -77,13 +100,10 @@ void handle_user_input(const char* itself ,string* s){
 
     if(pid > 0){
 	waitpid(pid,NULL,0);
-	//printf("---------Father waited %d--------\n",getpid());
     }
     else if(0 == pid){
-	//printf("----------child %d-------------\n",getpid());
 	//lunching itself with the user input on the CLI
 	execlp(itself,itself,get_str(*s),NULL);
-	//printf("error child \n");
     }
     else{
 	perror("fork");
@@ -95,6 +115,15 @@ void redirect_to(int old,int new){
 	perror("dup2");
 	exit(EXIT_FAILURE);
     }
+}
+
+void execute_cmd(string full_cmd){
+    array(string) input = tokenize(get_str(full_cmd)," ");
+
+    string cmd = get_elem_array(string)(input,0);
+
+    array(char_ptr) args = build_excevp_args(input);
+    execvp(get_str(cmd),get_array(char_ptr)(args));
 }
 
 void handle_recursion(char** argv)
@@ -111,52 +140,31 @@ void handle_recursion(char** argv)
     array(string) input_cli = tokenize(argv[1],"|");
 	    
     if(pid > 0) { 
-	close(pipe_fds[FD_WRITTING]);
-	//printf("father - several commands \n");
-
 	//father will execute the last command		
-	//TODO Build a back acces function
-	string last_command = get_elem_array(string)(input_cli,size_array(string)(input_cli)-1);
-
-	array(string) toks_current_cmd = tokenize(get_str(last_command)," ");
-	string cmd = get_elem_array(string)(toks_current_cmd,0);
-	array(char_ptr) args = build_excevp_args(toks_current_cmd);
-	//printf("//////// \n");
-	//printf("last cmd : %s \n", get_str(last_command));
-	//printf("cmd : %s \n", get_str(cmd));
-	for(size_t i = 0 ; i < args.size ; ++i){
-	    //printf("args : %s \n", args.ptr[i]);
-	}
-	//printf("//////// \n");
-
-
+	close(pipe_fds[FD_WRITTING]);
 	redirect_to(pipe_fds[FD_READING],STDIN_FILENO);
 	close(pipe_fds[FD_READING]);
 
-	execvp(get_str(cmd),get_array(char_ptr)(args));		    
+	//TODO Build a back acces function
+	string last_command = get_elem_array(string)(input_cli,size_array(string)(input_cli)-1);
+
+	execute_cmd(last_command);
     } else if (0 == pid){
-	//printf("child,  several commands \n");
 	close(pipe_fds[FD_READING]);
+	redirect_to(pipe_fds[FD_WRITTING],STDOUT_FILENO);
+	close(pipe_fds[FD_WRITTING]);
 
 	string leftover_cli;build_string(&leftover_cli);
 	size_t  leftover_cli_nb = size_array(string)(input_cli)-1;
+
 	for(size_t i = 0 ; i < leftover_cli_nb ; ++i) {
 	    string tmp = get_elem_array(string)(input_cli,i);
 	    append_string(&leftover_cli,get_str(tmp));
 	    append_char(&leftover_cli,'|');
 	}
 	pop_string(&leftover_cli);
-	//printf("========= \n");
-	//printf("bin : %s \n",argv[0]);
-	print_string(leftover_cli);
-	//printf("========= \n");	
 
-	//printf("keep recursion \n");
-
-	redirect_to(pipe_fds[FD_WRITTING],STDOUT_FILENO);
-	close(pipe_fds[FD_WRITTING]);
 	execlp(argv[0],argv[0],get_str(leftover_cli),NULL);
-	//printf("error child, several cmds \n");
     } else{
 	perror("fork");
 	exit(EXIT_FAILURE);
@@ -167,39 +175,22 @@ int main(int argc,char* argv[])
 {
     //there are no arguments on the CLI
     if(1 == argc) {
-	//printf("Init shell : %d \n",getpid());
 	while(1) {
 	    string s = get_user_input();
 	    handle_user_input(argv[0],&s);
 	    destruct_string(&s);
 	}
     } else if(argc > 1) {
-	////printf("executor : %d \n",getpid());
-
 	string tmp;build_string(&tmp);
 	append_string(&tmp,argv[1]);
 
 	unsigned int how_many_pipes = string_count_characters(tmp,'|');
-	//printf("nb of pipes = %d \n",how_many_pipes);
-
 	if(how_many_pipes == 0) {
-	    //printf("several commands, but only one left \n");
-	    array(string) input = tokenize(get_str(tmp)," ");
-
-	    string cmd = get_elem_array(string)(input,0);
-
-	    array(char_ptr) args = build_excevp_args(input);
-	    printf("cmd : %s \n", get_str(cmd));
-	    for(size_t i = 0 ; i < args.size ; ++i){
-		printf("args : %s \n", args.ptr[i]);
-	    }
-	    execvp(get_str(cmd),get_array(char_ptr)(args));
+	    execute_cmd(tmp);
 	} else {
 	    handle_recursion(argv);
 	}
-    } else {
-	//printf("CACA \n");
-    }
+    } 
 
     return 0;
 }
