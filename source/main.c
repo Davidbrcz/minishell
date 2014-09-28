@@ -77,16 +77,15 @@ void handle_user_input(const char* itself ,string* s){
 
     if(pid > 0){
 	waitpid(pid,NULL,0);
-	printf("---------Father %d--------\n",getpid());
+	//printf("---------Father waited %d--------\n",getpid());
     }
     else if(0 == pid){
-	printf("----------child %d-------------\n",getpid());
+	//printf("----------child %d-------------\n",getpid());
 	//lunching itself with the user input on the CLI
 	execlp(itself,itself,get_str(*s),NULL);
-	printf("error child \n");
+	//printf("error child \n");
     }
     else{
-	printf("error while forking");
 	perror("fork");
 	exit(EXIT_FAILURE);
     }
@@ -97,90 +96,113 @@ void redirect_to(int old,int new){
 	exit(EXIT_FAILURE);
     }
 }
+
+void handle_recursion(char** argv)
+{
+    //printf("several commands \n");
+
+    int pipe_fds[2];
+    if(pipe(pipe_fds) == -1){
+	perror("pipe");
+	exit(EXIT_FAILURE);
+    }
+	    
+    int pid = fork();
+    array(string) input_cli = tokenize(argv[1],"|");
+	    
+    if(pid > 0) { 
+	close(pipe_fds[FD_WRITTING]);
+	//printf("father - several commands \n");
+
+	//father will execute the last command		
+	//TODO Build a back acces function
+	string last_command = get_elem_array(string)(input_cli,size_array(string)(input_cli)-1);
+
+	array(string) toks_current_cmd = tokenize(get_str(last_command)," ");
+	string cmd = get_elem_array(string)(toks_current_cmd,0);
+	array(char_ptr) args = build_excevp_args(toks_current_cmd);
+	//printf("//////// \n");
+	//printf("last cmd : %s \n", get_str(last_command));
+	//printf("cmd : %s \n", get_str(cmd));
+	for(size_t i = 0 ; i < args.size ; ++i){
+	    //printf("args : %s \n", args.ptr[i]);
+	}
+	//printf("//////// \n");
+
+
+	redirect_to(pipe_fds[FD_READING],STDIN_FILENO);
+	close(pipe_fds[FD_READING]);
+
+	execvp(get_str(cmd),get_array(char_ptr)(args));		    
+    } else if (0 == pid){
+	//printf("child,  several commands \n");
+	close(pipe_fds[FD_READING]);
+
+	string leftover_cli;build_string(&leftover_cli);
+	size_t  leftover_cli_nb = size_array(string)(input_cli)-1;
+	for(size_t i = 0 ; i < leftover_cli_nb ; ++i) {
+	    string tmp = get_elem_array(string)(input_cli,i);
+	    append_string(&leftover_cli,get_str(tmp));
+	    append_char(&leftover_cli,'|');
+	}
+	pop_string(&leftover_cli);
+	//printf("========= \n");
+	//printf("bin : %s \n",argv[0]);
+	print_string(leftover_cli);
+	//printf("========= \n");	
+
+	//printf("keep recursion \n");
+
+	redirect_to(pipe_fds[FD_WRITTING],STDOUT_FILENO);
+	close(pipe_fds[FD_WRITTING]);
+	execlp(argv[0],argv[0],get_str(leftover_cli),NULL);
+	//printf("error child, several cmds \n");
+    } else{
+	perror("fork");
+	exit(EXIT_FAILURE);
+    }
+}
+
 int main(int argc,char* argv[])
 {
     //there are no arguments on the CLI
-    if(1 == argc)
-    {
-	printf("Init shell : %d \n",getpid());
+    if(1 == argc) {
+	//printf("Init shell : %d \n",getpid());
 	while(1) {
 	    string s = get_user_input();
 	    handle_user_input(argv[0],&s);
 	    destruct_string(&s);
 	}
-    } else if(argc > 1){
-	printf("executor : %d \n",getpid());
-	string tmp;
-	build_string(&tmp);
+    } else if(argc > 1) {
+	////printf("executor : %d \n",getpid());
+
+	string tmp;build_string(&tmp);
 	append_string(&tmp,argv[1]);
+
 	unsigned int how_many_pipes = string_count_characters(tmp,'|');
-	if(how_many_pipes == 0){
+	//printf("nb of pipes = %d \n",how_many_pipes);
+
+	if(how_many_pipes == 0) {
+	    //printf("several commands, but only one left \n");
 	    array(string) input = tokenize(get_str(tmp)," ");
 
 	    string cmd = get_elem_array(string)(input,0);
-	    array(char_ptr) args = build_excevp_args(input);
 
+	    array(char_ptr) args = build_excevp_args(input);
+	    printf("cmd : %s \n", get_str(cmd));
+	    for(size_t i = 0 ; i < args.size ; ++i){
+		printf("args : %s \n", args.ptr[i]);
+	    }
 	    execvp(get_str(cmd),get_array(char_ptr)(args));
 	} else {
-
-	    printf("several commands \n");
-	    int pipe_fds[2];
-	    if(pipe(pipe_fds) == -1){
-		perror("pipe");
-		exit(EXIT_FAILURE);
-	    }
-	    
-	    int pid = fork();
-	    array(string) input_cli = tokenize(argv[1],"|");
-
-	    if(pid > 0){ 
-		printf("father several commands \n");
-		//father will execute the last command
-		
-		//TODO Build a back acces function
-		string last_command = get_elem_array(string)(input_cli,size_array(string)(input_cli)-1);
-
-		array(string) toks_current_cmd = tokenize(get_str(last_command)," ");
-		string cmd = get_elem_array(string)(toks_current_cmd,0);
-		array(char_ptr) args = build_excevp_args(toks_current_cmd);
-
-		close(pipe_fds[FD_WRITTING]);
-		redirect_to(pipe_fds[FD_READING],STDIN_FILENO);
-		execvp(get_str(cmd),get_array(char_ptr)(args));		    
-	    } else if (0 == pid){
-		
-		string leftover_cli;build_string(&leftover_cli);
-		size_t  leftover_cli_nb = size_array(string)(input_cli)-1;
-		for(size_t i = 0 ; i < leftover_cli_nb ; ++i){
-		    string tmp = get_elem_array(string)(input_cli,i);
-		    append_string(&leftover_cli,get_str(tmp));
-		}
-		printf("========= \n");
-		print_string(leftover_cli);
-		printf("========= \n");	
-
-		close(pipe_fds[FD_READING]);
-		redirect_to(pipe_fds[FD_WRITTING],STDOUT_FILENO);
-		execlp(argv[0],argv[0],get_str(leftover_cli),NULL);
-	    } else{
-		perror("fork");
-		exit(EXIT_FAILURE);
-	    }
+	    handle_recursion(argv);
 	}
+    } else {
+	//printf("CACA \n");
     }
 
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
