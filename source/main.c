@@ -1,16 +1,20 @@
+#define _GNU_SOURCE             
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "mystring.h"
-#include "array_string.h"
-
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <string.h>
 #include <errno.h>
+#include <fcntl.h>
+
+#include "mystring.h"
+#include "array_string.h"
 
 char delim_cmd[]={'|'};
+
+const int FD_WRITTING = 1;
+const int FD_READING = 0;
 
 string get_user_input() {
     printf("> ");
@@ -83,9 +87,16 @@ void handle_user_input(const char* itself ,string* s){
     }
     else{
 	printf("error while forking");
+	perror("fork");
+	exit(EXIT_FAILURE);
     }
 }
-
+void redirect_to(int old,int new){
+    if(dup2(old,new)==-1){
+	perror("dup2");
+	exit(EXIT_FAILURE);
+    }
+}
 int main(int argc,char* argv[])
 {
     //there are no arguments on the CLI
@@ -111,7 +122,50 @@ int main(int argc,char* argv[])
 
 	    execvp(get_str(cmd),get_array(char_ptr)(args));
 	} else {
-	    //handle_multiple_commands();
+
+	    printf("several commands \n");
+	    int pipe_fds[2];
+	    if(pipe(pipe_fds) == -1){
+		perror("pipe");
+		exit(EXIT_FAILURE);
+	    }
+	    
+	    int pid = fork();
+	    array(string) input_cli = tokenize(argv[1],"|");
+
+	    if(pid > 0){ 
+		printf("father several commands \n");
+		//father will execute the last command
+		
+		//TODO Build a back acces function
+		string last_command = get_elem_array(string)(input_cli,size_array(string)(input_cli)-1);
+
+		array(string) toks_current_cmd = tokenize(get_str(last_command)," ");
+		string cmd = get_elem_array(string)(toks_current_cmd,0);
+		array(char_ptr) args = build_excevp_args(toks_current_cmd);
+
+		close(pipe_fds[FD_WRITTING]);
+		redirect_to(pipe_fds[FD_READING],STDIN_FILENO);
+		execvp(get_str(cmd),get_array(char_ptr)(args));		    
+	    } else if (0 == pid){
+		
+		string leftover_cli;build_string(&leftover_cli);
+		size_t  leftover_cli_nb = size_array(string)(input_cli)-1;
+		for(size_t i = 0 ; i < leftover_cli_nb ; ++i){
+		    string tmp = get_elem_array(string)(input_cli,i);
+		    append_string(&leftover_cli,get_str(tmp));
+		}
+		printf("========= \n");
+		print_string(leftover_cli);
+		printf("========= \n");	
+
+		close(pipe_fds[FD_READING]);
+		redirect_to(pipe_fds[FD_WRITTING],STDOUT_FILENO);
+		execlp(argv[0],argv[0],get_str(leftover_cli),NULL);
+	    } else{
+		perror("fork");
+		exit(EXIT_FAILURE);
+	    }
 	}
     }
 
