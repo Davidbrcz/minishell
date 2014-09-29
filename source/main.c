@@ -51,8 +51,14 @@ string get_user_input() {
     char c;
     while( (c=fgetc(stdin)) !='\n')
     {
+	if(EOF==c)
+	{
+	    printf("\n");
+	    exit(0);
+	}
 	append_char(&s,c);
     }
+
     return s;
 }
 
@@ -128,8 +134,6 @@ void execute_cmd(string full_cmd){
 
 void handle_recursion(char** argv)
 {
-    //printf("several commands \n");
-
     int pipe_fds[2];
     if(pipe(pipe_fds) == -1){
 	perror("pipe");
