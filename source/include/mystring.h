@@ -37,18 +37,19 @@ Construction/Destruction
 ========================
 */
 /**
- * \brief Fonction permettant d'initialiser le contenu de la structure. L'espace memoire (ie s) ne doit pas etre NULL
+ * \brief Fonction permettant d'initialiser le contenu de la structure. 
+L'espace memoire (ie s) ne doit pas etre NULL
  
-    A la sortie, s->ptr est valide, s->capacity=MYSTRING_DEFAULT_CAPACITY et s->size=0
+A la sortie, s->ptr est valide, s->capacity=MYSTRING_DEFAULT_CAPACITY et s->size=0
  */
 void build_string(string* s);
 
 /**
-  \brief Fonction permettant de liberer le contenu de la structure. L'espace memoire (ie s) ne doit pas etre NULL
+\brief Fonction permettant de liberer le contenu de la structure. L'espace memoire (ie s) ne doit pas etre NULL
  
- A la sortie, s->ptr est invalide, s->capacity=0 et s->size=0. 
- L'espace memoire que la structure en elle meme occupe doit encore etre libere s'il a ete alloue dynamiquement
- */
+A la sortie, s->ptr est invalide, s->capacity=0 et s->size=0. 
+L'espace memoire que la structure en elle meme occupe doit encore etre libere s'il a ete alloue dynamiquement
+*/
 void destruct_string(string* s);
 
 /*
@@ -83,7 +84,8 @@ MODIFICATION
 
 /**
  * \fn void append(string* s,const char* c)
- * \brief Fonction permetant d'ajouter a la chaine s la chaine pointe par c. s et c ne doivent pas etre nuls.
+ * \brief Fonction permetant d'ajouter a la chaine s la chaine pointe par c. 
+s et c ne doivent pas etre nuls.
  */
 void append_string(string* s,const char* c);
 

@@ -36,18 +36,17 @@ void print_string(string s) {
 
 void append_string(string* s,const char* c) {
   int append_size=strlen(c);
-  int i=0;
+  int old_capa = s->capacity;
   if( (s->size+append_size) > (s->capacity-1))
     {
       if(!reserve(s,s->capacity+append_size+MYSTRING_DEFAULT_CAPACITY)){
    	printf("Out of mem, reserve failed in append_string");
 	exit(-1);
       }
-      memset(s->ptr+s->size,'\0',append_size+MYSTRING_DEFAULT_CAPACITY);   
+      memset(s->ptr+old_capa,'\0',append_size+MYSTRING_DEFAULT_CAPACITY);   
    }
 
-
-  for(i=0;i<append_size;++i)
+  for(int i=0;i<append_size;++i)
     {
       s->ptr[s->size]=c[i]; 
       s->size++;
@@ -84,11 +83,12 @@ void append_char(string* s,char c) {
 
   if(size(*s) +1 > capacity(*s))
     {
+      int old_capa = s->capacity;
       if(!reserve(s,s->capacity+MYSTRING_DEFAULT_CAPACITY)) {
 	  printf("Out of mem, reserve failed in append_char");
 	  exit(-1);
 	}
-      memset(s->ptr+s->size,'\0',MYSTRING_DEFAULT_CAPACITY);
+      memset(s->ptr+old_capa,'\0',MYSTRING_DEFAULT_CAPACITY);
     }
   
   s->ptr[s->size]=c;
