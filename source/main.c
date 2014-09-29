@@ -69,6 +69,7 @@ string get_user_input() {
 	}
 	append_char(&s,c);
     }
+
     return s;
 }
 
@@ -130,15 +131,29 @@ void redirect_to(int old,int new){
 void execute_cmd(string full_cmd){
     array(string) input = tokenize(get_str(full_cmd)," ");
 
-    for(size_t i = 0 ; i < size_array(string)(input);++i){
+    size_t i = 0;
+    while (i < size_array(string)(input)) {
 	string tmp = get_elem_array(string)(input,i);
-	printf("%d \n",tmp.size);
-	if(strcmp(get_str(tmp),">")){
-	    
-	}
-	if(strcmp(get_str(tmp),"<")){
-	    
-	}
+	char* tmpstr = get_str(tmp);
+	if(*tmpstr == '<') {
+	    dup(0);	    
+	    close(0);
+	    tmpstr++;
+	    if (-1 == open(tmpstr,0)) {
+		perror("open");
+		exit(EXIT_FAILURE);
+	    }
+	    remove_elem_array(string)(&input,i);
+	} else if(*tmpstr == '>'){
+	    dup(1);
+	    close(1);
+	    tmpstr++;
+	    if (-1 == open(tmpstr,1)) {
+		perror("open");
+		exit(EXIT_FAILURE);
+	    }
+	    remove_elem_array(string)(&input,i);
+	} else ++i;
     }
     string cmd = get_elem_array(string)(input,0);
 
