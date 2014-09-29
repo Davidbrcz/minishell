@@ -133,30 +133,38 @@ void execute_cmd(string full_cmd){
 
     size_t i = 0;
     while (i < size_array(string)(input)) {
-	string tmp = get_elem_array(string)(input,i);
-	char* tmpstr = get_str(tmp);
-	if(*tmpstr == '<') {
-	    dup(0);	    
-	    close(0);
-	    tmpstr++;
-	    if (-1 == open(tmpstr,0)) {
-		perror("open");
-		exit(EXIT_FAILURE);
-	    }
-	    remove_elem_array(string)(&input,i);
-	} else if(*tmpstr == '>'){
-	    dup(1);
-	    close(1);
-	    tmpstr++;
-	    if (-1 == open(tmpstr,1)) {
-		perror("open");
-		exit(EXIT_FAILURE);
-	    }
-	    remove_elem_array(string)(&input,i);
-	} else ++i;
+      string tmp = get_elem_array(string)(input,i);
+      char* tmpstr = get_str(tmp);
+      if(*tmpstr == '<') {
+	tmpstr++;
+
+	int fd = open(tmpstr,O_RDONLY);
+	if (-1 == fd) {
+	  perror("open");
+	  exit(EXIT_FAILURE);
+	}
+	dup2(fd,STDIN_FILENO);
+	close(fd);
+	
+	remove_elem_array(string)(&input,i);
+      } else if(*tmpstr == '>'){
+	tmpstr++;
+	int fd = open(tmpstr,O_WRONLY);
+	if (-1 == fd) {
+	  perror("open");
+	  exit(EXIT_FAILURE);
+	}
+
+	dup2(fd,STDOUT_FILENO);
+	close(fd);
+	
+	remove_elem_array(string)(&input,i);
+      } else {
+	++i;
+      }
     }
     string cmd = get_elem_array(string)(input,0);
-
+    
     array(char_ptr) args = build_excevp_args(input);
     execvp(get_str(cmd),get_array(char_ptr)(args));
 }
