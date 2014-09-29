@@ -152,26 +152,33 @@ void redirect_out(char* cmd) {
 	dup2(fd,STDOUT_FILENO);
 	close(fd);
 }
-
+bool handle_redir_ifany(string tmp){
+  char* tmpstr = get_str(tmp);
+  if(*tmpstr == '<') {
+    tmpstr++;
+    redirect_in(tmpstr);
+    return true;
+  } else if(*tmpstr == '>'){
+    tmpstr++;
+    redirect_out(tmpstr);
+    return true;
+  }
+  return false;
+}
 void execute_cmd(string full_cmd){
     array(string) input = tokenize(get_str(full_cmd)," ");
 
     size_t i = 0;
     while (i < size_array(string)(input)) {
+
       string tmp = get_elem_array(string)(input,i);
-      char* tmpstr = get_str(tmp);
-      if(*tmpstr == '<') {
-	tmpstr++;
-	redirect_in(tmpstr);
+      if(handle_redir_ifany(tmp)) {
 	remove_elem_array(string)(&input,i);
-      } else if(*tmpstr == '>'){
-	tmpstr++;
-	redirect_out(tmpstr);
-	remove_elem_array(string)(&input,i);
-      } else {
+      }
+      else {
 	++i;
       }
-    }
+    } 
     string cmd = get_elem_array(string)(input,0);
     
     array(char_ptr) args = build_excevp_args(input);
