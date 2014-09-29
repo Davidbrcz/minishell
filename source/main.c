@@ -128,6 +128,31 @@ void redirect_to(int old,int new){
     }
 }
 
+void redirect_in(char* cmd) {
+	int fd = open(cmd,O_RDONLY);
+	if (-1 == fd) {
+	  perror("open");
+	  exit(EXIT_FAILURE);
+	}
+	dup2(fd,STDIN_FILENO);
+	close(fd);
+}
+
+void redirect_out(char* cmd) {
+	int fd = creat(cmd,S_IRWXU);
+	if (-1 == fd) {
+	  perror("creat");
+	  exit(EXIT_FAILURE);
+	}
+	fd = open(cmd, O_WRONLY);
+	if (-1 == fd) {
+	  perror("open");
+	  exit(EXIT_FAILURE);
+	}
+	dup2(fd,STDOUT_FILENO);
+	close(fd);
+}
+
 void execute_cmd(string full_cmd){
     array(string) input = tokenize(get_str(full_cmd)," ");
 
@@ -137,27 +162,11 @@ void execute_cmd(string full_cmd){
       char* tmpstr = get_str(tmp);
       if(*tmpstr == '<') {
 	tmpstr++;
-
-	int fd = open(tmpstr,O_RDONLY);
-	if (-1 == fd) {
-	  perror("open");
-	  exit(EXIT_FAILURE);
-	}
-	dup2(fd,STDIN_FILENO);
-	close(fd);
-	
+	redirect_in(tmpstr);
 	remove_elem_array(string)(&input,i);
       } else if(*tmpstr == '>'){
 	tmpstr++;
-	int fd = open(tmpstr,O_WRONLY);
-	if (-1 == fd) {
-	  perror("open");
-	  exit(EXIT_FAILURE);
-	}
-
-	dup2(fd,STDOUT_FILENO);
-	close(fd);
-	
+	redirect_out(tmpstr);
 	remove_elem_array(string)(&input,i);
       } else {
 	++i;
