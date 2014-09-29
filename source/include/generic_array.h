@@ -16,6 +16,7 @@
 #define get_elem_array(type) get_elem_array_##type
 #define init_empty_array(type) init_empty_array_##type
 #define remove_front_array(type) remove_front_array_##type
+#define remove_elem_array(type) remove_elem_array_##type
 
 #define GENERIC_ARRAY_DEF(type)			\
     typedef struct array_##type array_##type;	\
@@ -32,6 +33,7 @@ void add_array(type)(array(type)*, type);	\
 void remove_front_array(type)(array(type)*);	\
 type* get_array(type)(array(type));            \
 type get_elem_array(type)(array(type) ,size_t pos);	\
+void remove_elem_array(type)(array(type)* ,size_t pos);	
 
 #define create_array(type,name) \
     array(type) name;		\
@@ -89,11 +91,16 @@ type get_elem_array_##type(array(type) tab,size_t pos){       	\
     return tab.ptr[pos];					\
 }								\
 void remove_front_array_##type(array(type)* tab) {		\
-    for(size_t i = 0; i < tab->size-1 ;++i){			\
+  if(tab->size > 0) {						\
+    remove_elem_array(type)(tab,0);				\
+  }								\
+}								\
+ void remove_elem_array_##type(array(type)* tab,size_t pos) {   \
+   for(size_t i = pos; i < tab->size-1 ;++i){			\
 	tab->ptr[i]=tab->ptr[i+1];				\
-    }								\
-    tab->size--;						\
-    tab->capacity++;						\
+   }								\
+   tab->size--;							\
+   tab->capacity++;						\
 }
 #endif
 
