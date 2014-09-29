@@ -13,12 +13,16 @@
 #include <sys/types.h>
 #include <pwd.h>
 
-char delim_cmd[]={'|'};
 
 const int FD_WRITTING = 1;
 const int FD_READING = 0;
 
-string format_pre_prompt(){
+/**
+   Allocate a string that will containt the string to display before the prompt 
+   That string has to be deleted after. 
+   @return the string to display before the prompt
+*/
+string format_pre_prompt() {
     struct passwd *pw = getpwuid(getuid());
     const char *homedir = pw->pw_dir;
 
@@ -37,6 +41,13 @@ string format_pre_prompt(){
     free(pwd);
     return result;
 }
+
+/**
+   Will get the input from the user and return it as a string.
+   
+   Will exit the program if the user enters Ctrl+D
+   @return a string containing all the input from the user
+*/
 string get_user_input() {
     string result = format_pre_prompt();
     printf("%s >",get_str(result));
@@ -58,10 +69,14 @@ string get_user_input() {
 	}
 	append_char(&s,c);
     }
-
     return s;
 }
 
+/**
+  Will put into the array all the part of str separated by one 
+  of the tokens in delim. The returned array has be destruct after use
+  \return the parsed string in an array
+*/
 array(string) tokenize(const char* str,const char* delim){
     size_t size = strlen(str);
     char* tmp=malloc((size+1)*sizeof(*tmp));
@@ -78,21 +93,10 @@ array(string) tokenize(const char* str,const char* delim){
     }
     return arr;
 }
-array(string) get_paths(){
-    create_empty_array(string,tab);
 
-    char* path = getenv ("PATH");
-    if (path) {
-	tab = tokenize(path,":");
-    }
-
-    for(size_t i=0;i<tab.size;++i)
-    {
-	print_string(tab.ptr[i]);
-    }	        
-    return tab;
-}
-
+/**
+   
+*/
 array(char_ptr) build_excevp_args(array(string) arr){
     create_array(char_ptr, tmp);
     for(size_t i = 0; i < size_array(string)(arr) ; ++i){
@@ -128,6 +132,7 @@ void execute_cmd(string full_cmd){
 
     for(size_t i = 0 ; i < size_array(string)(input);++i){
 	string tmp = get_elem_array(string)(input,i);
+	printf("%d \n",tmp.size);
 	if(strcmp(get_str(tmp),">")){
 	    
 	}
@@ -207,9 +212,3 @@ int main(int argc,char* argv[])
 
     return 0;
 }
-
-
-
-
-
-
