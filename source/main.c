@@ -126,6 +126,15 @@ void redirect_to(int old,int new){
 void execute_cmd(string full_cmd){
     array(string) input = tokenize(get_str(full_cmd)," ");
 
+    for(size_t i = 0 ; i < array_size(string)(input);++i){
+	string tmp = get_elem_array(string)(input,i);
+	if(strcmp(get_str(tmp),">")){
+	    
+	}
+	if(strcmp(get_str(tmp),"<")){
+	    
+	}
+    }
     string cmd = get_elem_array(string)(input,0);
 
     array(char_ptr) args = build_excevp_args(input);
