@@ -121,6 +121,10 @@ void handle_user_input(const char* itself ,string* s){
 	exit(EXIT_FAILURE);
     }
 }
+
+/**
+   Redirects from fid <old> to fid <new>
+*/
 void redirect_to(int old,int new){
     if(dup2(old,new)==-1){
 	perror("dup2");
@@ -128,6 +132,9 @@ void redirect_to(int old,int new){
     }
 }
 
+/**
+   Redirects standard input to file <cmd>.
+*/
 void redirect_in(char* cmd) {
 	int fd = open(cmd,O_RDONLY);
 	if (-1 == fd) {
@@ -138,6 +145,9 @@ void redirect_in(char* cmd) {
 	close(fd);
 }
 
+/**
+   Redirects standard output to file <cmd>.
+*/
 void redirect_out(char* cmd) {
 	int fd = creat(cmd,S_IRWXU);
 	if (-1 == fd) {
@@ -152,6 +162,11 @@ void redirect_out(char* cmd) {
 	dup2(fd,STDOUT_FILENO);
 	close(fd);
 }
+
+/**
+   Handles redirections and changing working directory.
+   Only redirections written as <file or >file will be handled.
+*/
 bool handle_redir_ifany(string tmp){
   char* tmpstr = get_str(tmp);
   if(*tmpstr == '<') {
@@ -165,6 +180,10 @@ bool handle_redir_ifany(string tmp){
   }
   return false;
 }
+
+/**
+   Executes one command.
+*/
 void execute_cmd(string full_cmd){
     array(string) input = tokenize(get_str(full_cmd)," ");
 
@@ -185,6 +204,13 @@ void execute_cmd(string full_cmd){
     execvp(get_str(cmd),get_array(char_ptr)(args));
 }
 
+/**
+   Handles the recursion. This function will be called with at
+   least two pipes since the single command is handled in main.
+   Creates the pipe between the last command and the rest of the
+   input. After forking, the father will execute the last command
+   while the son will call main with the updated args.
+*/
 void handle_recursion(char** argv)
 {
     int pipe_fds[2];
@@ -192,7 +218,7 @@ void handle_recursion(char** argv)
 	perror("pipe");
 	exit(EXIT_FAILURE);
     }
-	    
+	     
     int pid = fork();
     array(string) input_cli = tokenize(argv[1],"|");
 	    
@@ -228,6 +254,9 @@ void handle_recursion(char** argv)
     }
 }
 
+/**
+   Main.
+*/
 int main(int argc,char* argv[])
 {
     //there are no arguments on the CLI
