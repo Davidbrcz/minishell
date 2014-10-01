@@ -7,12 +7,12 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <fcntl.h>
-
 #include "mystring.h"
 #include "array_string.h"
 #include <sys/types.h>
 #include <pwd.h>
-
+#include "bison.h"
+#include "gram.tab.h"
 
 const int FD_WRITTING = 1;
 const int FD_READING = 0;
@@ -115,6 +115,14 @@ array(char_ptr) build_excevp_args(array(string) arr){
    input on the CLI.
 */
 void handle_user_input(const char* itself ,string* s){
+    YY_BUFFER_STATE buffer = yy_scan_string(get_str(*s));
+    if(yyparse() == 0){
+    }
+    else{
+        yy_delete_buffer(buffer);
+	return ;
+    }
+    yy_delete_buffer(buffer);
     pid_t pid = fork();
     if(pid > 0){
 	waitpid(pid,NULL,0);
