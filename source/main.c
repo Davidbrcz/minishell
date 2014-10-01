@@ -46,7 +46,7 @@ string format_pre_prompt() {
    Will get the input from the user and return it as a string.
    
    Will exit the program if the user enters Ctrl+D
-   @return a string containing all the input from the user
+   \return a string containing all the input from the user
 */
 string get_user_input() {
     string result = format_pre_prompt();
@@ -75,7 +75,7 @@ string get_user_input() {
 
 /**
   Will put into the array all the part of str separated by one 
-  of the tokens in delim. The returned array has be destruct after use
+  of the tokens in delim. The returned array has to be destruct after use
   \return the parsed string in an array
 */
 array(string) tokenize(const char* str,const char* delim){
@@ -96,7 +96,9 @@ array(string) tokenize(const char* str,const char* delim){
 }
 
 /**
-   
+   Converts the <array(string)> excevp args into an
+   <array(char_ptr)>.
+   \return the converted array
 */
 array(char_ptr) build_excevp_args(array(string) arr){
     create_array(char_ptr, tmp);
@@ -106,24 +108,28 @@ array(char_ptr) build_excevp_args(array(string) arr){
     add_array(char_ptr)(&tmp,NULL);
     return tmp;
 }
+
+/**
+   Handles user input. After forking, the father will
+   wait its son while the son launches itself with user
+   input on the CLI.
+*/
 void handle_user_input(const char* itself ,string* s){
     pid_t pid = fork();
-
     if(pid > 0){
 	waitpid(pid,NULL,0);
     }
     else if(0 == pid){
-	//lunching itself with the user input on the CLI
 	execlp(itself,itself,get_str(*s),NULL);
     }
     else{
 	perror("fork");
 	exit(EXIT_FAILURE);
-    }
+   }
 }
 
 /**
-   Redirects from fid <old> to fid <new>
+   Redirects from pid <old> to pid <new>
 */
 void redirect_to(int old,int new){
     if(dup2(old,new)==-1){
@@ -136,36 +142,37 @@ void redirect_to(int old,int new){
    Redirects standard input to file <cmd>.
 */
 void redirect_in(char* cmd) {
-	int fd = open(cmd,O_RDONLY);
-	if (-1 == fd) {
-	  perror("open");
-	  exit(EXIT_FAILURE);
-	}
-	dup2(fd,STDIN_FILENO);
-	close(fd);
+    int fd = open(cmd,O_RDONLY);
+    if (-1 == fd) {
+	perror("open");
+	exit(EXIT_FAILURE);
+    }
+    dup2(fd,STDIN_FILENO);
+    close(fd);
 }
 
 /**
    Redirects standard output to file <cmd>.
 */
 void redirect_out(char* cmd) {
-	int fd = creat(cmd,S_IRWXU);
-	if (-1 == fd) {
-	  perror("creat");
-	  exit(EXIT_FAILURE);
-	}
-	fd = open(cmd, O_WRONLY);
-	if (-1 == fd) {
-	  perror("open");
-	  exit(EXIT_FAILURE);
-	}
-	dup2(fd,STDOUT_FILENO);
-	close(fd);
+    int fd = creat(cmd,S_IRWXU);
+    if (-1 == fd) {
+	perror("creat");
+	exit(EXIT_FAILURE);
+    }
+    fd = open(cmd, O_WRONLY);
+    if (-1 == fd) {
+	perror("open");
+	exit(EXIT_FAILURE);
+    }
+    dup2(fd,STDOUT_FILENO);
+    close(fd);
 }
 
 /**
-   Handles redirections and changing working directory.
+   Handles redirections.
    Only redirections written as <file or >file will be handled.
+   \return true if a redirection was handled.
 */
 bool handle_redir_ifany(string tmp){
   char* tmpstr = get_str(tmp);
