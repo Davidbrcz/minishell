@@ -8,7 +8,7 @@
 void build_string(string* s) {
   s->size=0;
   s->capacity=MYSTRING_DEFAULT_CAPACITY;
-  s->ptr=malloc(s->capacity*sizeof(*(s->ptr)));
+  s->ptr=malloc(s->capacity*sizeof(char));
 
   memset(s->ptr,'\0',s->capacity);
 }
@@ -37,7 +37,7 @@ void print_string(string s) {
 void append_string(string* s,const char* c) {
   int append_size=strlen(c);
   int old_capa = s->capacity;
-  if( (s->size+append_size) > (s->capacity-1))
+  if( (s->size+append_size+1) >= s->capacity)
     {
       if(!reserve(s,s->capacity+append_size+MYSTRING_DEFAULT_CAPACITY)){
    	printf("Out of mem, reserve failed in append_string");
@@ -81,7 +81,7 @@ void pop_string(string* s) {
 
 void append_char(string* s,char c) {
 
-  if(size(*s) +1 > capacity(*s))
+  if(size(*s) +1 >= capacity(*s))
     {
       int old_capa = s->capacity;
       if(!reserve(s,s->capacity+MYSTRING_DEFAULT_CAPACITY)) {
