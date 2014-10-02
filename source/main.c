@@ -185,16 +185,13 @@ void redirect_in(char* cmd) {
 /**
    Redirects standard output to file <cmd>.
 */
-void redirect_out(char* cmd) {
-    int fd = creat(cmd,S_IRWXU);
-
-    if (-1 == fd) {
-	perror("creat");
-	exit(EXIT_FAILURE);
+void redirect_out(char* cmd, bool append) {
+    int fd;
+    int flag = O_WRONLY | O_CREAT;
+    if (append) {
+    	flag |= O_APPEND;
     }
-
-    fd = open(cmd, O_WRONLY);
-
+    fd = open(cmd,flag); 
     if (-1 == fd) {
 	perror("open");
 	exit(EXIT_FAILURE);
@@ -206,7 +203,7 @@ void redirect_out(char* cmd) {
 
 /**
    Handles redirections.
-   Only redirections written as <file or >file will be handled.
+   Only redirections written as <file >file or >>file will be handled.
    \return true if a redirection was handled.
 */
 bool handle_redir_ifany(string tmp){
@@ -218,7 +215,12 @@ bool handle_redir_ifany(string tmp){
     return true;
   } else if(*tmpstr == '>'){
     tmpstr++;
-    redirect_out(tmpstr);
+    bool append = false;
+    if (*tmpstr == '>') {
+        tmpstr++;
+	append = true;
+    }
+    redirect_out(tmpstr,append);
     return true;
   }
 
