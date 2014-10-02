@@ -1,1 +1,8 @@
 *~
+*.pdf
+*.idx
+*.out
+*.aux
+*.log
+*.toc
+rapport/rapport.out
