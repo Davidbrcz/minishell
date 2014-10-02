@@ -187,11 +187,11 @@ void redirect_in(char* cmd) {
 */
 void redirect_out(char* cmd, bool append) {
     int fd;
-    int flag = O_WRONLY | O_CREAT;
+    int flag = O_WRONLY | O_CREAT ;
     if (append) {
     	flag |= O_APPEND;
     }
-    fd = open(cmd,flag); 
+    fd = open(cmd,flag,S_IRWXU);
     if (-1 == fd) {
 	perror("open");
 	exit(EXIT_FAILURE);
