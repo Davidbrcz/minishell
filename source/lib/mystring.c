@@ -110,3 +110,12 @@ unsigned int string_count_characters(string s, char c) {
     }
     return count;
 }
+
+void pop_front_string(string* s){
+    for(int i = 0 ; i<s->size-1;++i){
+	s->ptr[i] = s->ptr[i+1];
+    }
+    s->size--;
+    s->ptr[s->size]='\0';
+
+}

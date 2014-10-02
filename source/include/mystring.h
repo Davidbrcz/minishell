@@ -116,6 +116,14 @@ void print_string(string s);
  */
 void pop_string(string* s);
 
+
+/**
+ * \fn pop_string(string* s)
+ * \brief Fonction permettant de retirer le premier caractere de la chaine. s ne doit pas etre null
+ */
+void pop_front_string(string* s);
+
+//set the memory to \0, size to 0, keep capacity and memory valid
 void clear_string(string* s);
 
 unsigned int string_count_characters(string s, char c);
