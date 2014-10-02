@@ -82,7 +82,8 @@ string get_user_input() {
 array(string) tokenize(const char* str,const char* delim){
     size_t size = strlen(str);
     char* tmp=malloc((size+1)*sizeof(*tmp));
-    strncpy(tmp,str,size+1);
+    strncpy(tmp,str,size);
+    tmp[size]='\0';
 
     create_array(string,arr);
     char* tok = strtok(tmp,delim);
@@ -228,10 +229,51 @@ bool handle_redir_ifany(string tmp){
 }
 
 /**
+   Will merge quoted string that have been split in several strings and that should not have.
+   \return true if a redirection was handled.
+*/
+void merge_split_string(array(string)* arr){
+    array(string) new_array;
+    build_array(string)(&new_array);
+
+    for(size_t i = 0 ; i < size_array(string)(*arr) ; ++i){
+	
+	string str = get_elem_array(string)(*arr,i);	    
+	if(get_str(str)[0]=='\"'){
+	    string buf;
+	    build_string(&buf);
+
+	    string str2 = get_elem_array(string)(*arr,i);
+	    char* c = get_str(str2);
+
+	    while(c[size(str2)-1] != '\"'){
+		append_string(&buf,c);
+		append_char(&buf,' ');
+		i++;
+
+		str2 = get_elem_array(string)(*arr,i);
+		c = get_str(str2);
+	    }
+
+	    pop_string(&str2);
+	    append_string(&buf,c);
+
+	    pop_front_string(&buf);
+	    add_array(string)(&new_array,buf);
+	}else{
+	    add_array(string)(&new_array,str);	    
+	}
+    }
+    delete_array(string)(arr);
+    *arr=new_array;
+}
+
+/**
    Executes one command.
 */
 void execute_cmd(string full_cmd){
     array(string) input = tokenize(get_str(full_cmd)," ");
+    merge_split_string(&input);
     size_t i = 0;
 
     while (i < size_array(string)(input)) {
