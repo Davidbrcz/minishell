@@ -11,9 +11,10 @@ int fileno(FILE *stream);
 %option noinput
 %%
 
-[-a-zA-Z0-9_\./]+ { yylval.str = strdup(yytext); return WORD;}
+[-\}$\{a-zA-Z0-9_\./]+ { yylval.str = strdup(yytext); return WORD;}
 
 \"([^\\\"]|\\.)*\" {  yylval.str = strdup(yytext); return QWORD;}
+\'([^\\\']|\\.)*\' {  yylval.str = strdup(yytext); return QWORD;}
 
 "|" {return PIPE;}
 "<" {return IN;}
