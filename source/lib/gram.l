@@ -18,6 +18,7 @@ int fileno(FILE *stream);
 "|" {return PIPE;}
 "<" {return IN;}
 ">" {return OUT;}
+">>" {return OUT_APPEND;}
 
 "\n" { return *yytext; } 
 [ \t] ;

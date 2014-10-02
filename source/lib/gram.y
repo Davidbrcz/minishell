@@ -1,4 +1,4 @@
-%token WORD PIPE IN OUT QWORD
+%token WORD PIPE IN OUT OUT_APPEND QWORD
 %type<str> cmd 
 %type<str> WORD
 %type<str> QWORD
@@ -31,11 +31,12 @@ cmd_end_pipe : cmd | cmd_out;
 cmd_in : cmd IN WORD //{printf("in file = %s \n",$<str>3);}
 ;
 
-cmd_inout : cmd OUT WORD IN WORD //{printf("in=%s\nout=%s\n",$<str>5,$<str>3);}
-          | cmd IN WORD OUT WORD //{printf("in=%s\nout=%s\n",$<str>3,$<str>5);}
+out_symbol : OUT | OUT_APPEND;
+cmd_inout : cmd out_symbol WORD IN WORD //{printf("in=%s\nout=%s\n",$<str>5,$<str>3);}
+          | cmd IN WORD out_symbol  WORD //{printf("in=%s\nout=%s\n",$<str>3,$<str>5);}
 ;
 
-cmd_out : cmd OUT WORD //{printf("out file = %s \n",$<str>3);}
+cmd_out : cmd out_symbol WORD //{printf("out file = %s \n",$<str>3);}
 ;
 
 cmd : WORD args //{printf("cmd(%d) = %s\n",j++,$$);}
