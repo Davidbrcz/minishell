@@ -3,7 +3,7 @@
 \usepackage[francais]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-
+\usepackage{fancyvrb}
 \usepackage{times}
 \usepackage{color}
 \usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,filecolor=blue]{hyperref}
@@ -41,6 +41,29 @@
 \maketitle
 \tableofcontents
 
-\lipsum
+Algorithme general 
+\begin{Verbatim}
+Lancement du shell 
 
+Si aucun argument fourni dans argv
+  Boucleinfinie
+  Demander commande
+    Si commande valide
+      forker() 
+      Si pere 
+         Attendre son fils
+      Si fils 
+         Relancer shell avec comme unique argument la commande
+  FinBoucle
+Si un argument est fourni dans argv
+  Compter nombre de pipe dans l'argument
+  Si pas de pipe
+    Executer la commande
+  Si une pipe au moins
+     forker()
+     Si pere
+       Executer la commande la plus a droite
+     Si fils
+       Relancer le shell avec comme unique argument l'entrée utilisateur privée de la dernière commande
+\end{Verbatim}
 \end{document}
