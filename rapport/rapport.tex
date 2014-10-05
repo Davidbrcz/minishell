@@ -18,7 +18,7 @@
   tabsize=8,
   frame=lines,
   keywordstyle=\color{blue},
-  numbers=left,
+  numbers=none,
   numberstyle=\tiny,
   numbersep=5pt,
   breaklines=true,
@@ -58,15 +58,17 @@ A l'heure actuelle, notre projet implémente :
 \end{itemize}
 
 \section{Gestion des tableau et des chaines de caractères}
-Afin de simplifier l'ecriture du programme, une mini bibliotheque de
+Afin de simplifier l'ecriture du programme, une petite bibliotheque de
 gestion des chaines des chaînes de caractères ainsi que des tableaux
-de taille dynamique a été crée. Celle ci offre un atout certain afin
-de se concentrer sur les problématiques qui sont plus dans le centre
-du projet.
+de taille dynamique de type aribitraire a été crée. 
+Celle ci offre un atout certain afin de se concentrer sur les
+problématiques qui sont plus dans le centre du projet.
 
+Ces dernières sont amenées à reservir dans le cadre d'autres futrus projets
+en C qui en aurait besoin.
 
-
-\section{Algorithme général}
+\section{Fonctionnement}
+\subsection{Algorithme général}
 Nous avons opté pour une gestion récursive de la ligne de commande. 
 
 L'algorithme général est décrit ci dessous : 
@@ -93,7 +95,6 @@ Si un argument est fourni dans argv
        Executer la commande la plus a droite
      Si fils
        Relancer le shell avec comme unique argument l'entree utilisateur privee de la derniere commande
-%\end{Verbatim}
 \end{lstlisting}
 
 En ce qui concerne la gestion des pipes, si l'exécution des commandes se faisait classiquement de gauche à
@@ -111,10 +112,32 @@ Visuellement, cela donne quelque chose comme sur la figure \ref{pipe}
 \label{pipe}
 \end{figure}
 
+
+\subsection{Redirections}
+Dans la version du code actuel, une contrainte sur la redirection est que le nom du fichier doit
+suivre \emph{sans espace} le symbole de redirection. On pourrait
+au besoin changer le coe afin de supporter la présence d'un espace.
+
+\subsection{Changement du répertoire courant}
+Le changement de répertoire se fait grace à la détection de la
+chaîne \emph{cd} dans la ligne de de commande. On va ensuiter appeler 
+\emph{chdir} sur le reste de la chaîne afin de changer de répertoire.
+
+Etant donné que le programme se relance lui même via arg[0], si le
+shell a été lancé de façon relative au répertoire courant, un
+changement de répertoire va empecher le shell de marcher. Il est donc
+nécessaire de le lancer avec un chemin absolu.
+
+Cette problématique ne se poserait pas si le binaire était dans le path.
+
 \section{Vérification de la cohérence de l'entrée utilisateur}
 
 Afin de vérifier la cohérence de l'entrée utilisateur, nous avons mis
 en place un petit analyseur avec Flex et Bison.
+
+De cette façon, on évite par exemple que l'utilisateur puisse entrer une commande 
+dont la sortie serait redirigée et qui serait en même temps pipée vers
+une autre commande.
 
 La grammaire est la suivante :
 \begin{lstlisting}
@@ -164,9 +187,16 @@ et le fichier du lexer :
 
 "\n" { return *yytext; } 
 \end{lstlisting}
-En l'état actuel, il sert juste à accepter ou refuse une séquence de
+En l'état actuel, il sert juste à accepter ou refuser une séquence de
 commande. On pourrait l'utiliser pour remplir des structures afin de 
 disposer de la ligne de commande déjà parsée sans avoir à faire appel
-à tokenize. Cette évolution n'a pas été réalisée.
+à la fonction tokenize. Cette évolution n'a pas été réalisée.
+\section{Améliorations et ajouts possibles}
+Il existe encore de nombreuses améliorations possibles à notre projet
 
+\begin{itemize}
+  \item Gestion séquentielle des commandes avec ;
+  \item Lancement conditionnel des commandes avec \& et \&\&
+  \item 
+\end{itemize}
 \end{document}
