@@ -69,32 +69,37 @@ en C qui en aurait besoin.
 
 \section{Fonctionnement}
 \subsection{Algorithme général}
-Nous avons opté pour une gestion récursive de la ligne de commande. 
+Nous avons opté pour une gestion récursive de la ligne de commande et
+des commandes pipées. 
 
 L'algorithme général est décrit ci dessous : 
 \begin{lstlisting}
 Lancement du shell 
 Si aucun argument fourni dans argv
-  Boucleinfinie
+  BoucleInfinie
   Demander commande
     Si commande valide
-      forker() 
+      fork() 
       Si pere 
          Attendre son fils
       Si fils 
          Relancer shell avec comme unique argument la commande
   FinBoucle
-Si un argument est fourni dans argv
+Sinon si un argument est fourni dans argv
   Compter nombre de pipe dans l'argument
   Si pas de pipe
     Executer la commande
-  Si une pipe au moins
+  Sinon si une pipe au moins
      pipe()
-     forker()
+     fork()
      Si pere
        Executer la commande la plus a droite
-     Si fils
-       Relancer le shell avec comme unique argument l'entree utilisateur privee de la derniere commande
+     Sinon fils
+       Relancer le shell avec comme unique argument l'entree
+       utilisateur privee de la derniere commande
+     FinSi
+  FinSi
+FinSi
 \end{lstlisting}
 
 En ce qui concerne la gestion des pipes, si l'exécution des commandes se faisait classiquement de gauche à
@@ -116,7 +121,7 @@ Visuellement, cela donne quelque chose comme sur la figure \ref{pipe}
 \subsection{Redirections}
 Dans la version du code actuel, une contrainte sur la redirection est que le nom du fichier doit
 suivre \emph{sans espace} le symbole de redirection. On pourrait
-au besoin changer le coe afin de supporter la présence d'un espace.
+au besoin changer le code afin de supporter la présence d'un espace.
 
 \subsection{Changement du répertoire courant}
 Le changement de répertoire se fait grace à la détection de la
@@ -193,10 +198,9 @@ disposer de la ligne de commande déjà parsée sans avoir à faire appel
 à la fonction tokenize. Cette évolution n'a pas été réalisée.
 \section{Améliorations et ajouts possibles}
 Il existe encore de nombreuses améliorations possibles à notre projet
-
 \begin{itemize}
-  \item Gestion séquentielle des commandes avec ;
+  \item Lancement séquentiel des commandes avec ;
   \item Lancement conditionnel des commandes avec \& et \&\&
-  \item 
+  \item Globing, auto-complétition, historique des commandes
 \end{itemize}
 \end{document}
