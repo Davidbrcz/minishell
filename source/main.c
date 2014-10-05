@@ -125,6 +125,7 @@ array(char_ptr) build_excevp_args(array(string) arr){
    launches itself with user input on the CLI.
 */
 void handle_user_input(const char* itself ,string* s){
+    //check the grammar
     YY_BUFFER_STATE buffer = yy_scan_string(get_str(*s));
 
     if(yyparse() == 0){
@@ -136,13 +137,14 @@ void handle_user_input(const char* itself ,string* s){
 
     yy_delete_buffer(buffer);
     char* tmp = get_str(*s);
-
+    //if the command is a cd 
     if (tmp[0] == 'c' && tmp[1] == 'd' && tmp[2] == ' ') {
   	if (-1 == chdir(tmp+3)) {
 	    perror("chdir");
 	    exit(EXIT_FAILURE);
 	}
     }
+    //we execute the command
     else {
     	pid_t pid = fork();
     	if(pid > 0){
@@ -230,7 +232,7 @@ bool handle_redir_ifany(string tmp){
 
 /**
    Will merge quoted string that have been split in several strings and that should not have.
-   \return true if a redirection was handled.
+   Previous content of arr will be freed. arr has to be valid
 */
 void merge_split_string(array(string)* arr){
     array(string) new_array;
@@ -276,8 +278,8 @@ void execute_cmd(string full_cmd){
     merge_split_string(&input);
     size_t i = 0;
 
+    //go through the arguments to check if there are any redirections 
     while (i < size_array(string)(input)) {
-
       string tmp = get_elem_array(string)(input,i);
       if(handle_redir_ifany(tmp)) {
 	remove_elem_array(string)(&input,i);
@@ -287,6 +289,7 @@ void execute_cmd(string full_cmd){
       }
     } 
 
+    //get the command, build the args execvp for and execute
     string cmd = get_elem_array(string)(input,0);
     array(char_ptr) args = build_excevp_args(input);
     execvp(get_str(cmd),get_array(char_ptr)(args));
@@ -302,24 +305,35 @@ void execute_cmd(string full_cmd){
 void handle_recursion(char** argv)
 {
     int pipe_fds[2];
-
+    // this function is called because there are several commands piped
+    //so first thing to do is to pipe.
     if(pipe(pipe_fds) == -1){
 	perror("pipe");
 	exit(EXIT_FAILURE);
     }     
     int pid = fork();
-    array(string) input_cli = tokenize(argv[1],"|");
-	    
+    array(string) input_cli = tokenize(argv[1],"|"); 
+    
+    
     if(pid > 0) { 	
+	//father
+	
+	//do the redirection
 	close(pipe_fds[FD_WRITTING]);
 	redirect_to(pipe_fds[FD_READING],STDIN_FILENO);
 	close(pipe_fds[FD_READING]);
+	
+	//execute
 	string last_command = get_elem_array(string)(input_cli,size_array(string)(input_cli)-1);
 	execute_cmd(last_command);
     } else if (0 == pid){
+        //do the redirection
 	close(pipe_fds[FD_READING]);
 	redirect_to(pipe_fds[FD_WRITTING],STDOUT_FILENO);
 	close(pipe_fds[FD_WRITTING]);
+
+	// Rebuild the cli without the last command
+	//not the most efficient, but the easier to write
 	string leftover_cli;build_string(&leftover_cli);
 	size_t  leftover_cli_nb = size_array(string)(input_cli)-1;
 	for(size_t i = 0 ; i < leftover_cli_nb ; ++i) {
@@ -327,7 +341,11 @@ void handle_recursion(char** argv)
 	    append_string(&leftover_cli,get_str(tmp));
 	    append_char(&leftover_cli,'|');
 	}
+	
+	//remove extra '|' at the end
 	pop_string(&leftover_cli);
+	
+	//launch itself
 	execlp(argv[0],argv[0],get_str(leftover_cli),NULL);
     } else{
 	perror("fork");
@@ -347,14 +365,17 @@ int main(int argc,char* argv[])
 	    handle_user_input(argv[0],&s);
 	    destruct_string(&s);
 	}
-    } else if(argc > 1) {
+    } //is there are some
+     else if(argc > 1) {
 	string tmp;build_string(&tmp);
 	append_string(&tmp,argv[1]);
-
+        //count how many pipes there are (~ number of commands)
 	unsigned int how_many_pipes = string_count_characters(tmp,'|');
+	//is there is none, simply run the command
 	if(how_many_pipes == 0) {
 	    execute_cmd(tmp);
 	} else {
+	    //will parse, fork and execute what needs to be.
 	    handle_recursion(argv);
 	}
     } 
