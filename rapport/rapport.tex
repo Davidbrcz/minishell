@@ -41,8 +41,8 @@
 %\tableofcontents
 
 \section{Cahier des charges et réalisation}
-Le but de mini projet était de se familiariser avec la gestion des
-processus et file descriptor dans un environement type Linux. Pour ce
+Le but du mini projet était de se familiariser avec la gestion des
+processus et file descriptors dans un environement type Linux. Pour ce
 faire, il fallait réaliser un mini-shell qui gérait au moins les pipes
 et les redirections.
 
@@ -58,21 +58,19 @@ A l'heure actuelle, notre projet implémente :
 \end{itemize}
 
 \section{Gestion des tableau et des chaines de caractères}
-Afin de simplifier l'ecriture du programme, une petite bibliotheque de
-gestion des chaines des chaînes de caractères ainsi que des tableaux
-de taille dynamique de type aribitraire a été crée. 
-Celle ci offre un atout certain afin de se concentrer sur les
-problématiques qui sont plus dans le centre du projet.
+Afin de simplifier l'écriture du programme, une petite bibliothèque de
+gestion des chaînes de caractères ainsi que des tableaux
+de taille dynamique de type aribitraire a été créée. 
+Celle-ci offre un atout certain afin de se concentrer sur les
+problématiques du projet.
 
-Ces dernières sont amenées à reservir dans le cadre d'autres futrus projets
-en C qui en aurait besoin.
 
 \section{Fonctionnement}
 \subsection{Algorithme général}
 Nous avons opté pour une gestion récursive de la ligne de commande et
 des commandes pipées. 
 
-L'algorithme général est décrit ci dessous : 
+L'algorithme général est décrit ci-dessous : 
 \begin{lstlisting}
 Lancement du shell 
 Si aucun argument fourni dans argv
@@ -80,13 +78,13 @@ Si aucun argument fourni dans argv
   Demander commande
     Si commande valide
       fork() 
-      Si pere 
+      Si père 
          Attendre son fils
       Si fils 
          Relancer shell avec comme unique argument la commande
   FinBoucle
 Sinon si un argument est fourni dans argv
-  Compter nombre de pipe dans l'argument
+  Compter nombre de pipes dans l'argument
   Si pas de pipe
     Executer la commande
   Sinon si une pipe au moins
@@ -102,17 +100,17 @@ Sinon si un argument est fourni dans argv
 FinSi
 \end{lstlisting}
 
-En ce qui concerne la gestion des pipes, si l'exécution des commandes se faisait classiquement de gauche à
-droite, le premier processus une fois fini signalerai au parent qu'il
+Cette gestion récursive oblige une exécution de droite à gauche 
+de la ligne de commande. En effet, si l'exécution des commandes se faisait classiquement de gauche à droite, le premier processus une fois fini signalerai au parent qu'il
 pourrait continuer alors que toute la chaîne de pipeline n'est pas
-forcement finie. Ici, c'est seulement une fois le dernier processus
+forcément finie. Ici, c'est seulement une fois le dernier processus
 fini que le père reçoit un signal comme quoi la séquence est finie.
 
 
 Visuellement, cela donne quelque chose comme sur la figure \ref{pipe} 
 \begin{figure}[!h]
 \centering
-  \includegraphics[scale=0.5]{img/pipes}
+  \includegraphics[scale=0.5]{img/pipes2}
   \caption{Exemple de gestion des pipes sur la séquence ps | sort | less}
 \label{pipe}
 \end{figure}
@@ -201,6 +199,6 @@ Il existe encore de nombreuses améliorations possibles à notre projet
 \begin{itemize}
   \item Lancement séquentiel des commandes avec ;
   \item Lancement conditionnel des commandes avec \& et \&\&
-  \item Globing, auto-complétition, historique des commandes
+  \item Globing, auto-complétion, historique des commandes
 \end{itemize}
 \end{document}
